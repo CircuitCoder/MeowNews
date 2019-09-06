@@ -19,6 +19,8 @@ const mapD2P = dispatch => ({
 function Search({ navigation, addPost }) {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [onEnd, setOnEnd] = useState(false);
   const [debouncer, setDebouncer] = useState(null);
   const [list, setList] = useState(null);
 
@@ -29,11 +31,27 @@ function Search({ navigation, addPost }) {
 
     setRefreshing(true);
 
-    const list = await fetchList({ keywords: search });
+    const list = await fetchList({ keywords: search.split(' ') });
     setList(ImList(list.data));
 
     setRefreshing(false);
   }, [refreshing, search, debouncer]);
+
+  const fetchMore = useCallback(async () => {
+    if(fetching || onEnd) return;
+    setFetching(true);
+
+    const fetched = await fetchList({ keywords: search.split(' '), till: list.get(list.size-1).publishTime });
+    let concated = list;
+    for(const row of fetched.data)
+      if(!concated.find(e => e.newsID === row.newsID))
+        concated = concated.push(row);
+
+    setList(ImList(concated));
+
+    if(concated.size === list.size) setOnEnd(true);
+    setFetching(false);
+  }, [fetching, onEnd, list]);
 
   useEffect(() => {
     refresh();
@@ -69,6 +87,17 @@ function Search({ navigation, addPost }) {
       getItem={(data, idx) => data.get(idx)}
       getItemCount={data => data.size}
       keyExtractor={(post, idx) => post.newsID}
+
+      ListFooterComponent={() => <View style={{
+        ...styles.loading,
+        opacity: fetching ? 1 : 0,
+      }}>
+        <ActivityIndicator animating={true} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>}
+
+      onEndReachedThreshold={0.1}
+      onEndReached={fetchMore}
 
       onRefresh={refresh}
       refreshing={refreshing}
@@ -178,6 +207,23 @@ const styles = StyleSheet.create({
     flex: 1,
     color: 'white',
     fontSize: 16,
+  },
+
+  loading: {
+    height: 60,
+    paddingBottom: 20,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+
+  loadingText: {
+    fontSize: 14,
+    color: 'rgba(0,0,0,.38)',
+    lineHeight: 40,
+    textAlign: 'center',
+    marginLeft: 10,
   },
 });
 
