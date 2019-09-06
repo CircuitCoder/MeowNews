@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { TextInput, VirtualizedList, View, StyleSheet } from 'react-native';
+import { TextInput, VirtualizedList, Image, View, StyleSheet } from 'react-native';
 import { Surface, ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
 import { connect } from 'react-redux';
 import { fetchList } from './util';
@@ -11,6 +11,7 @@ import { ALL_CATEGORIES } from './config';
 import { putPost } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
+import notfound from '../assets/notfound.png';
 
 const mapD2P = dispatch => ({
   addPost: p => dispatch(putPost(p.newsID, p)),
@@ -22,7 +23,7 @@ function Search({ navigation, addPost }) {
   const [fetching, setFetching] = useState(false);
   const [onEnd, setOnEnd] = useState(false);
   const [debouncer, setDebouncer] = useState(null);
-  const [list, setList] = useState(null);
+  const [list, setList] = useState(ImList());
 
   const refresh = useCallback(async () => {
     if(refreshing) return;
@@ -130,6 +131,31 @@ function Search({ navigation, addPost }) {
         </Card>;
       }}
     />
+
+    { list.size === 0 && search && !refreshing && debouncer === null ? <View style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    }}>
+      <Image
+        source={notfound}
+        resizeMode="contain"
+        style={{
+          height: 120,
+        }}
+      />
+      <Text style={{
+        marginTop: 10,
+        color: 'rgba(0,0,0,.38)',
+        fontSize: 16,
+      }}>Nothing to see here</Text>
+    </View> : null }
   </View>;
 }
 
