@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, VirtualizedList, StyleSheet } from 'react-native';
+import { Animated, View, VirtualizedList, StyleSheet } from 'react-native';
 import { Portal, Dialog, Text, List, Button, Paragraph, FAB } from 'react-native-paper';
 import { connect } from 'react-redux';
 
@@ -17,9 +17,17 @@ const mapD2P = dispatch => ({
   update: cate => dispatch(setCategories(cate)),
 });
 
+const OPACITY_THRESHOLD = new Animated.Value(1);
+const HEIGHT_THRESHOLD = new Animated.Value(80);
+const SHIFT_THRESHOLD = new Animated.Value(80);
+
 function Lists({ categories, navigation, update }) {
   const [editing, setEditing] = useState(null);
   const [adding, setAdding] = useState(false);
+
+  const [progress, setProgress] = useState(new Animated.Value(0));
+  const [height, setHeight] = useState(new Animated.Value(0));
+  const [movingTarget, setMovingTarget] = useState(null);
 
   const missing = ImList(ALL_CATEGORIES.filter(e => !categories.includes(e)));
 
@@ -30,18 +38,31 @@ function Lists({ categories, navigation, update }) {
       getItemCount={data => data.size}
       keyExtractor={(data, idx) => data}
       renderItem={({ item, index }) =>
-        <List.Item
-          title={item}
-          description={CATEGORY_DESC[item]}
-          onPress={() => navigation.push('List', {
-            category: item,
-            type: 'CATEGORY',
-          })}
-          onLongPress={() => {
-            setEditing(item);
+        <Animated.View
+          style={{
+            opacity: item === movingTarget ? Animated.multiply(progress, OPACITY_THRESHOLD) : OPACITY_THRESHOLD,
+            marginLeft: item === movingTarget ? Animated.multiply(Animated.subtract(1, progress), SHIFT_THRESHOLD) : 0,
+
+            height: item === movingTarget ? Animated.multiply(height, HEIGHT_THRESHOLD) : HEIGHT_THRESHOLD,
+            overflow: 'hidden',
           }}
-          left={props => <List.Icon {...props} icon={CATEGORY_ICON[item]} />}
-        />
+        >
+          <List.Item
+            style={{
+              height: 80,
+            }}
+            title={item}
+            description={CATEGORY_DESC[item]}
+            onPress={() => navigation.push('List', {
+              category: item,
+              type: 'CATEGORY',
+            })}
+            onLongPress={() => {
+              setEditing(item);
+            }}
+            left={props => <List.Icon {...props} icon={CATEGORY_ICON[item]} />}
+          />
+        </Animated.View>
       }
     />
     <FAB
@@ -67,6 +88,14 @@ function Lists({ categories, navigation, update }) {
               onPress={() => {
                 update(categories.push(item));
                 setAdding(false);
+
+                setMovingTarget(item);
+                const progress = new Animated.Value(0);
+                const height = new Animated.Value(1);
+                setProgress(progress);
+                setHeight(height);
+
+                Animated.timing(progress, { toValue: 1, duration: 1000 }).start();
               }}
               left={props => <List.Icon {...props} icon={CATEGORY_ICON[item]} />}
             />
@@ -83,10 +112,23 @@ function Lists({ categories, navigation, update }) {
           title="Delete"
           left={props => <List.Icon {...props} icon="delete" />}
           onPress={() => {
-            const idx = categories.findIndex(e => e === editing);
-            const removed = categories.delete(idx);
-            update(removed);
             setEditing(null);
+
+            setMovingTarget(editing);
+            const progress = new Animated.Value(1);
+            const height = new Animated.Value(1);
+            setProgress(progress);
+            setHeight(height);
+            Animated.sequence([
+              Animated.timing(progress, { toValue: 0, duration: 1000 }),
+              Animated.timing(height, { toValue: 0, duration: 1000 }),
+            ]).start();
+
+            setTimeout(() => {
+              const idx = categories.findIndex(e => e === editing);
+              const removed = categories.delete(idx);
+              update(removed);
+            }, 2000)
           }}
         />
 

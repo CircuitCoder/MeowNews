@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { VirtualizedList, View, StyleSheet } from 'react-native';
-import { Surface, ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
+import { ToastAndroid, VirtualizedList, View, StyleSheet } from 'react-native';
+import { Portal, Dialog, Surface, ActivityIndicator, Appbar, Text, Card, List as RNPList } from 'react-native-paper';
 import { connect } from 'react-redux';
 
 import { List as ImList, Seq } from 'immutable';
 
 import { ALL_CATEGORIES } from './config';
 
-import { refreshList, extendList } from './store/actions';
+import { refreshList, extendList, starPost, unstarPost, dropPost } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
 
@@ -19,6 +19,7 @@ const mapS2P = (state, { navigation }) => {
     return {
       list: Seq(state.lists.get(category)).map(e => ({
         read: state.history.has(e),
+        starred: state.favorites.has(e),
         post: state.posts.get(e),
       })),
       type,
@@ -28,6 +29,7 @@ const mapS2P = (state, { navigation }) => {
     return {
       list: state.history.toIndexedSeq().reverse().map(e => ({
         read: false,
+        starred: state.favorites.has(e),
         post: state.posts.get(e),
       })),
       type,
@@ -36,6 +38,7 @@ const mapS2P = (state, { navigation }) => {
     return {
       list: state.favorites.toIndexedSeq().reverse().map(e => ({
         read: false,
+        starred: state.favorites.has(e),
         post: state.posts.get(e),
       })),
       type,
@@ -54,18 +57,25 @@ const mapD2P = (dispatch, { navigation }) => {
     return {
       refresh: () => dispatch(refreshList(category)),
       extend: () => dispatch(extendList(category)),
+      star: p => dispatch(starPost(p.newsID)),
+      unstar: p => dispatch(unstarPost(p.newsID)),
+      drop: p => dispatch(dropPost(p.newsID)),
     };
   } else return {
     refresh: async () => 0,
     extend: async () => 0,
+    star: p => dispatch(starPost(p.newsID)),
+    unstar: p => dispatch(unstarPost(p.newsID)),
+    drop: p => dispatch(dropPost(p.newsID)),
   };
 };
 
-function List({ navigation, type, category, list, refresh: doRefresh, extend }) {
+function List({ navigation, type, category, list, refresh: doRefresh, extend, star, unstar, drop }) {
 
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [onEnd, setOnEnd] = useState(false);
+  const [context, setContext] = useState(null);
 
   const refresh = useCallback(async () => {
     if(refreshing) return;
@@ -137,12 +147,16 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend }) 
       onRefresh={refresh}
       refreshing={refreshing}
 
-      renderItem={({ item: { read, post }, index }) => {
+      renderItem={({ item, index }) => {
+        const { read, post } = item;
+
         return <Card
           style={styles.card}
           elevation={2}
           onPress={() => navigation.push('Post', { id: post.newsID })}
-          onLongPress={() => console.log(post)}
+          onLongPress={() => {
+            setContext(item);
+          }}
         >
           <Card.Cover
             style={styles.img}
@@ -165,6 +179,34 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend }) 
         </Card>;
       }}
     />
+
+    <Portal>
+      <Dialog
+        visible={context !== null}
+        onDismiss={() => setContext(null)}
+      >
+        <RNPList.Item
+          title={context?.starred ? 'Unstar' : 'Star'}
+          left={props => <RNPList.Icon {...props} icon={context?.starred ? 'star-border' : 'star' } />}
+          onPress={() => {
+            if(context?.starred) unstar(context?.post);
+            else star(context?.post);
+            setContext(null);
+          }}
+        />
+
+        <RNPList.Item
+          title="Remove from local storage"
+          description="Remove from offline storage, favorites and history."
+          left={props => <RNPList.Icon {...props} icon="delete" />}
+          onPress={() => {
+            drop(context?.post);
+            ToastAndroid.show('We have never seen this news before.', ToastAndroid.SHORT);
+            setContext(null);
+          }}
+        />
+      </Dialog>
+    </Portal>
   </View>;
 }
 

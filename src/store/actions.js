@@ -33,6 +33,11 @@ export const unstarPost = id => ({
   id,
 });
 
+export const dropPost = id => ({
+  type: 'DROP_POST',
+  id,
+});
+
 export const reset = () => ({
   type: 'RESET',
 });

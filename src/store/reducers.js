@@ -23,6 +23,8 @@ export function lists(state=Map(), action) {
     const newList = current.concat(action.payload);
     return state.set(action.list, newList);
   }
+  if(action.type === 'DROP_POST')
+    return state.map(l => l.filter(e => e !== action.id));
 
   return state;
 }
@@ -32,6 +34,8 @@ export function posts(state=Map(), action) {
     return Map();
   if(action.type === 'PUT_POST')
     return state.set(action.id, action.post);
+  if(action.type === 'DROP_POST')
+    return state.remove(action.id);
   return state;
 }
 
@@ -42,6 +46,8 @@ export function history(state=OrderedSet(), action) {
     const removed = state.remove(action.id); // Propagate to front
     return removed.add(action.id);
   }
+  if(action.type === 'DROP_POST')
+    return state.remove(action.id);
   return state;
 }
 
@@ -53,6 +59,8 @@ export function favorites(state=OrderedSet(), action) {
     return removed.add(action.id);
   }
   if(action.type === 'UNSTAR_POST')
+    return state.remove(action.id);
+  if(action.type === 'DROP_POST')
     return state.remove(action.id);
 
   return state;
