@@ -72,7 +72,7 @@ function List({ navigation, category, list, refresh: doRefresh, extend }) {
       data={list || ImList()}
       getItem={(data, idx) => data.get(idx)}
       getItemCount={data => data.size}
-      keyExtractor={(data, idx) => data.title}
+      keyExtractor={(data, idx) => data.newsID}
 
       ListFooterComponent={() => <Text style={styles.loading}>Loading...</Text>}
 
@@ -86,7 +86,7 @@ function List({ navigation, category, list, refresh: doRefresh, extend }) {
         return <Card
           style={styles.card}
           elevation={2}
-          onPress={() => console.log(item)}
+          onPress={() => navigation.push('Post', { id: item.newsID })}
           onLongPress={() => console.log(item)}
         >
           <Card.Cover
