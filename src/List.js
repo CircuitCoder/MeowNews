@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ToastAndroid, VirtualizedList, View, StyleSheet } from 'react-native';
+import { ToastAndroid, Image, VirtualizedList, View, StyleSheet } from 'react-native';
 import { Portal, Dialog, Surface, ActivityIndicator, Appbar, Text, Card, List as RNPList } from 'react-native-paper';
 import { connect } from 'react-redux';
 
@@ -10,6 +10,7 @@ import { ALL_CATEGORIES } from './config';
 import { refreshList, extendList, starPost, unstarPost, dropPost } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
+import notfound from '../assets/notfound.png';
 
 const mapS2P = (state, { navigation }) => {
   const type = navigation.getParam('type', 'CATEGORY');
@@ -207,6 +208,31 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend, st
         />
       </Dialog>
     </Portal>
+
+    { list.size === 0 && !refreshing ? <View style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    }}>
+      <Image
+        source={notfound}
+        resizeMode="contain"
+        style={{
+          height: 120,
+        }}
+      />
+      <Text style={{
+        marginTop: 10,
+        color: 'rgba(0,0,0,.38)',
+        fontSize: 16,
+      }}>Nothing to see here</Text>
+    </View> : null }
   </View>;
 }
 
