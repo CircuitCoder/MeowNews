@@ -35,7 +35,7 @@ export default function Root({ navigation }) {
     <Surface elevation={8}>
       <Appbar.Header>
         <Appbar.Content
-          title="PaperDye"
+          title="MeowNews"
         />
 
         <Appbar.Action
