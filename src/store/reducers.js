@@ -37,9 +37,21 @@ export function history(state=OrderedSet(), action) {
   if(action.type === 'RESET')
     return OrderedSet();
   if(action.type === 'READ_POST') {
-    console.log(action.id);
     const removed = state.remove(action.id); // Propagate to front
     return removed.add(action.id);
   }
+  return state;
+}
+
+export function favorites(state=OrderedSet(), action) {
+  if(action.type === 'RESET')
+    return OrderedSet();
+  if(action.type === 'STAR_POST') {
+    const removed = state.remove(action.id); // Propagate to front
+    return removed.add(action.id);
+  }
+  if(action.type === 'UNSTAR_POST')
+    return state.remove(action.id);
+
   return state;
 }

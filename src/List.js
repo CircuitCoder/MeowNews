@@ -32,6 +32,14 @@ const mapS2P = (state, { navigation }) => {
       })),
       type,
     };
+  } else if(type === 'FAVORITES') {
+    return {
+      list: state.favorites.toIndexedSeq().reverse().map(e => ({
+        read: false,
+        post: state.posts.get(e),
+      })),
+      type,
+    };
   } else return {
     list: Seq(),
     type: 'UNKNOWN',
@@ -48,8 +56,8 @@ const mapD2P = (dispatch, { navigation }) => {
       extend: () => dispatch(extendList(category)),
     };
   } else return {
-    refresh: () => {},
-    extend: () => {},
+    refresh: async () => 0,
+    extend: async () => 0,
   };
 };
 
@@ -94,6 +102,10 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend }) 
   } else if(type === 'HISTORY') {
     header = <Appbar.Content
       title="History"
+    />
+  } else if(type === 'FAVORITES') {
+    header = <Appbar.Content
+      title="Favorites"
     />
   }
 

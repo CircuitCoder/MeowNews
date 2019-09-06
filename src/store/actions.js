@@ -23,6 +23,16 @@ export const readPost = id => ({
   id,
 });
 
+export const starPost = id => ({
+  type: 'STAR_POST',
+  id,
+});
+
+export const unstarPost = id => ({
+  type: 'UNSTAR_POST',
+  id,
+});
+
 export const reset = () => ({
   type: 'RESET',
 });

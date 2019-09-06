@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Image, View, ScrollView, StyleSheet } from 'react-native';
 import { Appbar, Text } from 'react-native-paper';
 
-import { readPost } from './store/actions';
+import { readPost, starPost, unstarPost } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
 
@@ -12,6 +12,7 @@ const mapS2P = (state, { navigation }) => {
   const id = navigation.getParam('id', null);
   return {
     post: state.posts.get(id),
+    starred: state.favorites.has(id),
   };
 };
 
@@ -19,12 +20,14 @@ const mapD2P = (dispatch, { navigation }) => {
   const id = navigation.getParam('id', null);
   return {
     read: () => dispatch(readPost(id)),
+    star: () => dispatch(starPost(id)),
+    unstar: () => dispatch(unstarPost(id)),
   };
 };
 
 const THRESHOLD = 154;
 
-function Post({ navigation, post, read }) {
+function Post({ navigation, post, read, star, unstar, starred }) {
   useEffect(() => {
     read();
   }, []);
@@ -57,8 +60,8 @@ function Post({ navigation, post, read }) {
       />
 
       <Appbar.Action
-        icon="star-border"
-        onPress={() => navigation.goBack()}
+        icon={ starred ? 'star' : 'star-border' }
+        onPress={starred ? unstar : star}
       />
     </Appbar.Header>
 
@@ -74,7 +77,7 @@ function Post({ navigation, post, read }) {
         </Text>
 
         <Text style={styles.info}>
-          { post.publisher } / { post.publishTime }
+          { post.category } / { post.publisher } / { post.publishTime }
         </Text>
 
         { post.content.replace('\n\n+', '\n').split('\n').map((e, idx) => <Text key={idx} style={styles.para}>{ e }</Text>) }

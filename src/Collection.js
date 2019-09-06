@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Portal, Dialog, Text, List, Button, Paragraph } from 'react-native-paper';
+import { Divider, Portal, Dialog, Text, List, Button, Paragraph } from 'react-native-paper';
 import { ToastAndroid, View } from 'react-native';
 
 import { connect } from 'react-redux';
@@ -17,6 +17,16 @@ function Collection({ navigation, resetStore }) {
 
   return <View>
     <List.Item
+      title="Favorites"
+      onPress={() => {
+        navigation.push('List', {
+          type: 'FAVORITES',
+        });
+      }}
+      left={props => <List.Icon {...props} icon="star" />}
+    />
+
+    <List.Item
       title="History"
       onPress={() => {
         navigation.push('List', {
@@ -25,6 +35,8 @@ function Collection({ navigation, resetStore }) {
       }}
       left={props => <List.Icon {...props} icon="history" />}
     />
+
+    <Divider />
 
     <List.Item
       title="Drop local storage"
