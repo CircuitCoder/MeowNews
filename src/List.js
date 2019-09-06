@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { VirtualizedList, View, StyleSheet } from 'react-native';
-import { Appbar, Text, Card } from 'react-native-paper';
+import { ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
 import { connect } from 'react-redux';
 
 import { List as ImList, Seq } from 'immutable';
@@ -74,7 +74,10 @@ function List({ navigation, category, list, refresh: doRefresh, extend }) {
       getItemCount={data => data.size}
       keyExtractor={(data, idx) => data.newsID}
 
-      ListFooterComponent={() => <Text style={styles.loading}>Loading...</Text>}
+      ListFooterComponent={() => <View style={styles.loading}>
+        <ActivityIndicator animating={true} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>}
 
       onEndReachedThreshold={0.1}
       onEndReached={fetchMore}
@@ -182,10 +185,18 @@ const styles = StyleSheet.create({
   loading: {
     height: 60,
     paddingBottom: 20,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+
+  loadingText: {
     fontSize: 14,
     color: 'rgba(0,0,0,.38)',
     lineHeight: 40,
     textAlign: 'center',
+    marginLeft: 10,
   },
 });
 

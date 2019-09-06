@@ -65,7 +65,7 @@ function Post({ navigation, post }) {
           { post.publisher } / { post.publishTime }
         </Text>
 
-        { post.content.split('\n').map((e, idx) => <Text key={idx} style={styles.para}>{ e }</Text>) }
+        { post.content.replace('\n\n+', '\n').split('\n').map((e, idx) => <Text key={idx} style={styles.para}>{ e }</Text>) }
       </View>
     </ScrollView>
   </View>;
