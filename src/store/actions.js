@@ -18,6 +18,15 @@ export const putPost = (id, post) => ({
   id, post,
 });
 
+export const readPost = id => ({
+  type: 'READ_POST',
+  id,
+});
+
+export const reset = () => ({
+  type: 'RESET',
+});
+
 export function refreshList(category) {
   return async (dispatch, getStore) => {
     const store = getStore();

@@ -12,22 +12,50 @@ import { refreshList, extendList } from './store/actions';
 import placeholder from '../assets/placeholder.jpg';
 
 const mapS2P = (state, { navigation }) => {
-  const category = navigation.getParam('category', ALL_CATEGORIES[0]);
-  return {
-    list: Seq(state.lists.get(category)).map(e => state.posts.get(e)),
-    category,
+  const type = navigation.getParam('type', 'CATEGORY');
+
+  if(type === 'CATEGORY') {
+    const category = navigation.getParam('category', ALL_CATEGORIES[0]);
+    return {
+      list: Seq(state.lists.get(category)).map(e => ({
+        read: state.history.has(e),
+        post: state.posts.get(e),
+      })),
+      type,
+      category,
+    };
+  } else if(type === 'HISTORY') {
+    return {
+      list: state.history.toIndexedSeq().reverse().map(e => ({
+        read: false,
+        post: state.posts.get(e),
+      })),
+      type,
+    };
+  } else return {
+    list: Seq(),
+    type: 'UNKNOWN',
   };
 };
 
 const mapD2P = (dispatch, { navigation }) => {
-  const category = navigation.getParam('category', ALL_CATEGORIES[0]);
-  return {
-    refresh: () => dispatch(refreshList(category)),
-    extend: () => dispatch(extendList(category)),
+  const type = navigation.getParam('type', 'CATEGORY');
+
+  if(type === 'CATEGORY') {
+    const category = navigation.getParam('category', ALL_CATEGORIES[0]);
+    return {
+      refresh: () => dispatch(refreshList(category)),
+      extend: () => dispatch(extendList(category)),
+    };
+  } else return {
+    refresh: () => {},
+    extend: () => {},
   };
 };
 
-function List({ navigation, category, list, refresh: doRefresh, extend }) {
+function List({ navigation, type, category, list, refresh: doRefresh, extend }) {
+
+  console.log(list);
 
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -56,15 +84,25 @@ function List({ navigation, category, list, refresh: doRefresh, extend }) {
     setFetching(false);
   }, [fetching, onEnd]);
 
+  let header = null;
+
+  if(type === 'CATEGORY') {
+    header = <Appbar.Content
+      title="News List"
+      subtitle={'Category: ' + category}
+    />
+  } else if(type === 'HISTORY') {
+    header = <Appbar.Content
+      title="History"
+    />
+  }
+
   return <View style={styles.container}>
     <Appbar.Header style={styles.appbar}>
       <Appbar.BackAction
         onPress={() => navigation.goBack()}
       />
-      <Appbar.Content
-        title="News List"
-        subtitle={'Category: ' + category}
-      />
+      { header }
     </Appbar.Header>
 
     <VirtualizedList
@@ -72,9 +110,12 @@ function List({ navigation, category, list, refresh: doRefresh, extend }) {
       data={list || ImList()}
       getItem={(data, idx) => data.get(idx)}
       getItemCount={data => data.size}
-      keyExtractor={(data, idx) => data.newsID}
+      keyExtractor={({ post }, idx) => post.newsID}
 
-      ListFooterComponent={() => <View style={styles.loading}>
+      ListFooterComponent={() => <View style={{
+        ...styles.loading,
+        opacity: fetching ? 1 : 0,
+      }}>
         <ActivityIndicator animating={true} />
         <Text style={styles.loadingText}>Loading...</Text>
       </View>}
@@ -85,26 +126,29 @@ function List({ navigation, category, list, refresh: doRefresh, extend }) {
       onRefresh={refresh}
       refreshing={refreshing}
 
-      renderItem={({ item, index }) => {
+      renderItem={({ item: { read, post }, index }) => {
         return <Card
           style={styles.card}
           elevation={2}
-          onPress={() => navigation.push('Post', { id: item.newsID })}
-          onLongPress={() => console.log(item)}
+          onPress={() => navigation.push('Post', { id: post.newsID })}
+          onLongPress={() => console.log(post)}
         >
           <Card.Cover
             style={styles.img}
-            source={ item.images.length > 0 ? { uri: item.images[0] } : placeholder }
+            source={ post.images.length > 0 ? { uri: post.images[0] } : placeholder }
           />
 
           <View style={styles.cardInner}>
-            <Text style={styles.title}>
-              { item.title }
+            <Text style={{
+              ...styles.title,
+              color: read ? 'rgba(0,0,0,.38)' : 'rgba(0,0,0,.87)',
+            }}>
+              { post.title }
             </Text>
 
             <View style={styles.info}>
-              <Text style={styles.time}>{ item.publishTime }</Text>
-              <Text style={styles.publisher}>{ item.publisher }</Text>
+              <Text style={styles.time}>{ post.publishTime }</Text>
+              <Text style={styles.publisher}>{ post.publisher }</Text>
             </View>
           </View>
         </Card>;

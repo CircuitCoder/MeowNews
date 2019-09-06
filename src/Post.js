@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 import { Image, View, ScrollView, StyleSheet } from 'react-native';
 import { Appbar, Text } from 'react-native-paper';
 
+import { readPost } from './store/actions';
+
 import placeholder from '../assets/placeholder.jpg';
 
 const mapS2P = (state, { navigation }) => {
@@ -13,9 +15,19 @@ const mapS2P = (state, { navigation }) => {
   };
 };
 
+const mapD2P = (dispatch, { navigation }) => {
+  const id = navigation.getParam('id', null);
+  return {
+    read: () => dispatch(readPost(id)),
+  };
+};
+
 const THRESHOLD = 154;
 
-function Post({ navigation, post }) {
+function Post({ navigation, post, read }) {
+  useEffect(() => {
+    read();
+  }, []);
   const [appbar, setAppbar] = useState(0);
   const checkLocation = useCallback(payload => {
     const y = payload.nativeEvent.contentOffset.y;
@@ -123,4 +135,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default connect(mapS2P)(Post);
+export default connect(mapS2P, mapD2P)(Post);

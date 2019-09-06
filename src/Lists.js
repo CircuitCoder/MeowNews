@@ -20,7 +20,8 @@ function Lists({ categories, navigation }) {
         title={item}
         description={CATEGORY_DESC[item]}
         onPress={() => navigation.push('List', {
-          category: item
+          category: item,
+          type: 'CATEGORY',
         })}
         left={props => <List.Icon {...props} icon={CATEGORY_ICON[item]} />}
       />
