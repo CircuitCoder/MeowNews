@@ -10,6 +10,7 @@ const persistConfig = {
   transforms: [immutableTransform()],
   key: 'root',
   storage: ExpoFileSystemStorage,
+  timeout: 0,
 };
 
 const handlers = combineReducers(reducers);

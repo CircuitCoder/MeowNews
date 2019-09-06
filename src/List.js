@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
 
     fontSize: 14,
     lineHeight: 20,
+    fontWeight: 'bold',
 
     padding: 20,
     paddingBottom: 10,
@@ -158,11 +159,11 @@ const styles = StyleSheet.create({
 
   time: {
     flex: 1,
-    color: 'rgba(0,0,0,.54)',
+    color: 'rgba(0,0,0,.7)',
   },
 
   publisher: {
-    color: 'rgba(0,0,0,.54)',
+    color: 'rgba(0,0,0,.7)',
   },
 
   img: {
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
 
-    backgroundColor: 'rgba(255,255,255,.7)',
+    backgroundColor: 'rgba(255,255,255,.6)',
 
     flexDirection: 'column',
     display: 'flex',
