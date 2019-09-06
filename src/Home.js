@@ -7,8 +7,8 @@ import Discover from './Discover';
 import Collection from './Collection';
 
 const bottomRoutes = [
+  { key: 'discover', title: 'Discover', icon: 'style' },
   { key: 'lists', title: 'Lists', icon: 'list' },
-  { key: 'discover', title: 'Discover', icon: 'star' },
   { key: 'collection', title: 'Collection', icon: 'person' },
 ];
 
@@ -19,7 +19,7 @@ const sceneMap = {
 };
 
 export default function Root({ navigation }) {
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(1);
 
   const bottomState = {
     index: idx,

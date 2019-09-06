@@ -37,6 +37,11 @@ export const reset = () => ({
   type: 'RESET',
 });
 
+export const setCategories = categories => ({
+  type: 'SET_CATEGORIES',
+  categories,
+});
+
 export function refreshList(category) {
   return async (dispatch, getStore) => {
     const store = getStore();

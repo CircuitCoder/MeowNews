@@ -5,6 +5,8 @@ import { ALL_CATEGORIES } from '../config';
 export function categories(state=List(ALL_CATEGORIES), action) {
   if(action.type === 'RESET')
     return List(ALL_CATEGORIES);
+  if(action.type === 'SET_CATEGORIES')
+    return action.categories;
   return state;
 }
 

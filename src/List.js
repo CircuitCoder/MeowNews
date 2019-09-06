@@ -63,8 +63,6 @@ const mapD2P = (dispatch, { navigation }) => {
 
 function List({ navigation, type, category, list, refresh: doRefresh, extend }) {
 
-  console.log(list);
-
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [onEnd, setOnEnd] = useState(false);
@@ -83,7 +81,6 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend }) 
   }, []);
 
   const fetchMore = useCallback(async () => {
-    console.log('Extend');
     if(fetching || onEnd) return;
     setFetching(true);
     const length = await extend();

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 
-import { Image, View, ScrollView, StyleSheet } from 'react-native';
+import { ToastAndroid, Share, Image, View, ScrollView, StyleSheet } from 'react-native';
 import { Appbar, Text } from 'react-native-paper';
+
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system'
 
 import { readPost, starPost, unstarPost } from './store/actions';
 
@@ -38,6 +42,42 @@ function Post({ navigation, post, read, star, unstar, starred }) {
     else setAppbar(y / THRESHOLD);
   }, []);
 
+  const share = useCallback(async () => {
+    /*
+    const result = await Share.share({
+      title: `Read on PaperDye: ${post.title}`,
+      message: `Shared from PaperDye: ${post.title}\n\n${post.content.substr(0, 10)}...`,
+      url: 'https://google.com',
+    }, {
+      dialogTitle: 'Test share',
+    });
+
+    if(result.action === Share.sharedAction)
+      ToastAndroid.show('Shared!', ToastAndroid.SHORT);
+    */
+
+    // Fetching data
+    const segs = post.images[0].split('.');
+    const ext = segs[segs.length-1];
+    const { uri, status, headers } = await FileSystem.createDownloadResumable(post.images[0], FileSystem.documentDirectory + 'tmp.' + ext, {}).downloadAsync();
+    const type = headers['Content-Type'];
+
+    const { uri: contentUri } = await FileSystem.getContentUriAsync(uri);
+    console.log(contentUri);
+
+    const result = await IntentLauncher.startActivityAsync('android.intent.action.SEND', {
+      type,
+      extra: {
+        'android.intent.extra.TEXT': `${post.title}\n\n${post.content.substr(0,40)}...`,
+        'android.intent.extra.STREAM': contentUri,
+      },
+      data: contentUri,
+      flags: 1,
+    });
+    // const result = await Sharing.shareAsync(uri);
+    console.log(result);
+  }, [post]);
+
   return <View style={styles.container}>
     <Appbar.Header style={{
       ...styles.appbar,
@@ -61,7 +101,13 @@ function Post({ navigation, post, read, star, unstar, starred }) {
 
       <Appbar.Action
         icon={ starred ? 'star' : 'star-border' }
+        color={ starred ? '#ffc107' : 'white' }
         onPress={starred ? unstar : star}
+      />
+
+      <Appbar.Action
+        icon="share"
+        onPress={ share }
       />
     </Appbar.Header>
 

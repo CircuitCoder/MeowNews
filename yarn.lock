@@ -2080,6 +2080,11 @@ expo-font@~6.0.1:
   dependencies:
     fontfaceobserver "^2.1.0"
 
+expo-intent-launcher@~6.0.0:
+  version "6.0.0"
+  resolved "https://registry.npm.taobao.org/expo-intent-launcher/download/expo-intent-launcher-6.0.0.tgz?cache=0&sync_timestamp=1564200525709&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fexpo-intent-launcher%2Fdownload%2Fexpo-intent-launcher-6.0.0.tgz#453fab5dbce5577ac4a7d4979da44bbeb21d0f47"
+  integrity sha1-RT+rXbzlV3rEp9SXnaRLvrIdD0c=
+
 expo-keep-awake@~6.0.0:
   version "6.0.0"
   resolved "https://registry.npm.taobao.org/expo-keep-awake/download/expo-keep-awake-6.0.0.tgz#e0d6d1263c6a73488272a62aef98312ab25cab1f"
@@ -2101,6 +2106,11 @@ expo-permissions@~6.0.0:
   version "6.0.0"
   resolved "https://registry.npm.taobao.org/expo-permissions/download/expo-permissions-6.0.0.tgz#2943f1aa98de833b88cea73cf03d18d08957cb68"
   integrity sha1-KUPxqpjegzuIzqc88D0Y0IlXy2g=
+
+expo-sharing@~6.0.0:
+  version "6.0.0"
+  resolved "https://registry.npm.taobao.org/expo-sharing/download/expo-sharing-6.0.0.tgz#d1c7c27461836946b7d75632b92c634a08a48c70"
+  integrity sha1-0cfCdGGDaUa311YyuSxjSgikjHA=
 
 expo-sqlite@~6.0.0:
   version "6.0.0"
