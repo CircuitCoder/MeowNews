@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { FAB, Appbar, BottomNavigation, Text } from 'react-native-paper';
+import { Surface, FAB, Appbar, BottomNavigation, Text } from 'react-native-paper';
 
 import Lists from './Lists';
 import Discover from './Discover';
@@ -32,11 +32,13 @@ export default function Root({ navigation }) {
   };
 
   return <View style={styles.container}>
-    <Appbar.Header>
-      <Appbar.Content
-        title="PaperDye"
-      />
-    </Appbar.Header>
+    <Surface elevation={8}>
+      <Appbar.Header>
+        <Appbar.Content
+          title="PaperDye"
+        />
+      </Appbar.Header>
+    </Surface>
 
     <BottomNavigation
       navigationState={bottomState}

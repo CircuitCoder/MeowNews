@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { VirtualizedList, View, StyleSheet } from 'react-native';
-import { ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
+import { Surface, ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
 import { connect } from 'react-redux';
 
 import { List as ImList, Seq } from 'immutable';
@@ -98,12 +98,14 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend }) 
   }
 
   return <View style={styles.container}>
-    <Appbar.Header style={styles.appbar}>
-      <Appbar.BackAction
-        onPress={() => navigation.goBack()}
-      />
-      { header }
-    </Appbar.Header>
+    <Surface elevation={8}>
+      <Appbar.Header style={styles.appbar}>
+        <Appbar.BackAction
+          onPress={() => navigation.goBack()}
+        />
+        { header }
+      </Appbar.Header>
+    </Surface>
 
     <VirtualizedList
       style={styles.list}
