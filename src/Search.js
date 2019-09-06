@@ -56,7 +56,7 @@ function Search({ navigation, addPost }) {
             if(debouncer !== null) clearTimeout(debouncer);
             setDebouncer(setTimeout(() => {
               setDebouncer(null);
-            }, 1000));
+            }, 500));
           }}
           value={search}
         />
