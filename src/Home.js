@@ -37,6 +37,11 @@ export default function Root({ navigation }) {
         <Appbar.Content
           title="PaperDye"
         />
+
+        <Appbar.Action
+          icon="search"
+          onPress={() => navigation.push('Search')}
+        />
       </Appbar.Header>
     </Surface>
 

@@ -10,11 +10,10 @@ export function formatDateTime(d) {
   return `${formatDate(d)} ${formatTime(d)}`;
 }
 
-export async function fetchList({ from, till, category }) {
+export async function fetchList({ from, till, category, keywords }) {
   const tillTs = till || formatDateTime(new Date());
   const fromTs = from || '1970-01-01 00:00:00';
-  console.log(till);
-  let url = `xXxXxXxXxXx?size=20&startDate=${fromTs}&endDate=${tillTs}&categories=${category}`;
+  let url = `xXxXxXxXxXx?size=20&startDate=${fromTs}&endDate=${tillTs}&categories=${category || ''}&words=${keywords || ''}`;
 
   const resp = await fetch(url);
   const list = await resp.json();
