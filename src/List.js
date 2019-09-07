@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ToastAndroid, Image, VirtualizedList, View, StyleSheet } from 'react-native';
+import { Clipboard, ToastAndroid, Image, VirtualizedList, View, StyleSheet } from 'react-native';
 import { Portal, Dialog, Surface, ActivityIndicator, Appbar, Text, Card, List as RNPList } from 'react-native-paper';
 import { connect } from 'react-redux';
+
+import toBuffer from 'blob-to-buffer';
+
+import AES from 'aes-js';
 
 import { List as ImList, Seq } from 'immutable';
 
 import { ALL_CATEGORIES } from './config';
 
-import { refreshList, extendList, starPost, unstarPost, inboxArc, inboxRecv, dropPost } from './store/actions';
+import { refreshList, extendList, putPost, starPost, unstarPost, inboxArc, inboxRecv, dropPost } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
 import notfound from '../assets/notfound.png';
@@ -76,6 +80,7 @@ const mapD2P = (dispatch, { navigation }) => {
       drop: p => dispatch(dropPost(p.newsID)),
       inbox: p => dispatch(inboxRecv(p.newsID)),
       arc: p => dispatch(inboxArc(p.newsID)),
+      put: p => dispatch(putPost(p.newsID, p)),
     };
   } else return {
     refresh: async () => 0,
@@ -85,10 +90,11 @@ const mapD2P = (dispatch, { navigation }) => {
     drop: p => dispatch(dropPost(p.newsID)),
     inbox: p => dispatch(inboxRecv(p.newsID)),
     arc: p => dispatch(inboxArc(p.newsID)),
+    put: p => dispatch(putPost(p.newsID, p)),
   };
 };
 
-function List({ navigation, type, category, list, refresh: doRefresh, extend, star, unstar, drop, inbox, arc }) {
+function List({ navigation, type, category, list, refresh: doRefresh, extend, star, unstar, drop, inbox, arc, put }) {
 
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -116,6 +122,40 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend, st
     if(length === 0) setOnEnd(true);
     setFetching(false);
   }, [fetching, onEnd]);
+
+  const encRecv = useCallback(async () => {
+    const ident = await Clipboard.getString();
+    ToastAndroid.show(ident, ToastAndroid.SHORT);
+
+    const match = ident.match(/^([^/]+)\/([0-9a-f]+)$/);
+    if(!match)
+      return ToastAndroid.show('It seems no sharing in clipboard', ToastAndroid.SHORT);
+
+    const [, id, keyHex] = match;
+    const key = AES.utils.hex.toBytes(keyHex);
+
+    let original;
+    try {
+      const resp = await fetch(`https://transfer.sh/${id}/dye`);
+      const cont = AES.utils.hex.toBytes(await resp.text());
+
+      const ctr = new AES.ModeOfOperation.ctr(key);
+      const decrypted = ctr.decrypt(cont);
+      const text = AES.utils.utf8.fromBytes(decrypted);
+      original = JSON.parse(text);
+    } catch(e) {
+      console.log(e);
+      ToastAndroid.show('It seems no sharing in clipboard', ToastAndroid.SHORT);
+      return;
+    }
+
+    put(original);
+    inbox(original);
+
+    navigation.push('Post', {
+      id: original.newsID,
+    });
+  });
 
   let header = null;
 
@@ -145,6 +185,8 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend, st
           onPress={() => navigation.goBack()}
         />
         { header }
+
+        { type === 'INBOX' ? <Appbar.Action icon="move-to-inbox" onPress={encRecv} /> : null }
       </Appbar.Header>
     </Surface>
 

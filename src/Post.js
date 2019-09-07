@@ -93,18 +93,17 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
     const plain = JSON.stringify(post);
     const key = await Random.getRandomBytesAsync(256/8);
     const ctr = new AES.ModeOfOperation.ctr(key);
-    const encrypted = ctr.encrypt(AES.utils.utf8.toBytes(plain));
-    const typed = Uint8Array.from(encrypted);
+    const encrypted = AES.utils.hex.fromBytes(ctr.encrypt(AES.utils.utf8.toBytes(plain)));
 
     const resp = await fetch('https://transfer.sh/dye', {
       method: 'PUT',
       headers: {
-        'Content-Type': 'applicatoin/octet-stream',
+        'Content-Type': 'text/plain',
         'Max-Downloads': 1,
         'Max-Days': 1,
       },
       mode: 'cors',
-      body: typed,
+      body: encrypted,
     });
     const url = await resp.text();
     const [,seg] = url.match(/^https:\/\/transfer\.sh\/([^/]+)\/dye$/);
@@ -114,10 +113,12 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
 
     setTimeout(async () => {
       const result = await Share.share({
-        message: `Copy the following into your MeowNews Inbox:\n\n${ident}`,
+        message: ident,
       }, {
         dialogTitle: 'Save/Send your share-code',
       });
+
+      ToastAndroid.show('Copy the share-code into MeowNews Inbox', ToastAndroid.SHORT);
     }, 200);
   });
 
