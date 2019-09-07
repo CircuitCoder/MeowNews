@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 
+import RichShare from 'react-native-share';
+
 import { ToastAndroid, Share, Image, View, ScrollView, StyleSheet } from 'react-native';
 import { Divider, Portal, Dialog, ActivityIndicator, Appbar, Text, Button } from 'react-native-paper';
 
 import AES from 'aes-js';
+import { Buffer } from 'buffer';
 
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Sharing from 'expo-sharing';
@@ -65,15 +68,20 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
       ToastAndroid.show('Shared!', ToastAndroid.SHORT);
     */
 
-    // Fetching data
-    const segs = post.images[0].split('.');
-    const ext = segs[segs.length-1];
-    const { uri, status, headers } = await FileSystem.createDownloadResumable(post.images[0], FileSystem.documentDirectory + 'tmp.' + ext, {}).downloadAsync();
-    const type = headers['Content-Type'];
+    const message = post.title + '\n\n' + post.content.substr(0, 80) + '...';
+    const opts = { message };
 
-    const { uri: contentUri } = await FileSystem.getContentUriAsync(uri);
-    console.log(contentUri);
+    if(post.images.length > 0) {
+      // Fetching data
+      const segs = post.images[0].split('.');
+      const ext = segs[segs.length-1];
+      const { uri, status, headers } = await FileSystem.downloadAsync(post.images[0], FileSystem.cacheDirectory + 'tmp.' + ext);
+      const type = headers['Content-Type'];
+      const dataUri = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      opts.url = `data:${type};base64,${dataUri}`;
+    }
 
+    /*
     const result = await IntentLauncher.startActivityAsync('android.intent.action.SEND', {
       type,
       extra: {
@@ -83,8 +91,11 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
       data: contentUri,
       flags: 1,
     });
+    */
+
     // const result = await Sharing.shareAsync(uri);
-    console.log(result);
+
+    const result = await RichShare.open(opts);
   }, [post]);
 
   const encShare = useCallback(async () => {

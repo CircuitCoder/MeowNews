@@ -94,12 +94,15 @@ const mapD2P = (dispatch, { navigation }) => {
   };
 };
 
-function List({ navigation, type, category, list, refresh: doRefresh, extend, star, unstar, drop, inbox, arc, put }) {
+function List({ navigation, type, category, list: fullList, refresh: doRefresh, extend: fullExtend, star, unstar, drop, inbox, arc, put }) {
 
+  const [threshold, setThreshold] = useState(10);
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [onEnd, setOnEnd] = useState(false);
   const [context, setContext] = useState(null);
+
+  const list = fullList.slice(0, threshold);
 
   const refresh = useCallback(async () => {
     if(refreshing) return;
@@ -107,6 +110,15 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend, st
     await doRefresh();
     setRefreshing(false);
   }, [refreshing]);
+
+  const extend = useCallback(async () => {
+    setThreshold(threshold + 10);
+    if(threshold + 10 > fullList.size) {
+      const incr = await fullExtend();
+      if(incr === 0 && threshold >= fullList.size) return 0;
+      else return incr;
+    } else return 10;
+  }, [threshold]);
 
   // Refresh list immediately if no list is ready
   useEffect(() => {
