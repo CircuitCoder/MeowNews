@@ -17,6 +17,16 @@ function Collection({ navigation, resetStore }) {
 
   return <View>
     <List.Item
+      title="Inbox"
+      onPress={() => {
+        navigation.push('List', {
+          type: 'INBOX',
+        });
+      }}
+      left={props => <List.Icon {...props} icon="inbox" />}
+    />
+
+    <List.Item
       title="Favorites"
       onPress={() => {
         navigation.push('List', {

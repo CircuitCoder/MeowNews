@@ -7,7 +7,7 @@ import { List as ImList, Seq } from 'immutable';
 
 import { ALL_CATEGORIES } from './config';
 
-import { refreshList, extendList, starPost, unstarPost, dropPost } from './store/actions';
+import { refreshList, extendList, starPost, unstarPost, inboxArc, inboxRecv, dropPost } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
 import notfound from '../assets/notfound.png';
@@ -21,6 +21,7 @@ const mapS2P = (state, { navigation }) => {
       list: Seq(state.lists.get(category)).map(e => ({
         read: state.history.has(e),
         starred: state.favorites.has(e),
+        inbox: state.inbox.has(e),
         post: state.posts.get(e),
       })),
       type,
@@ -31,6 +32,7 @@ const mapS2P = (state, { navigation }) => {
       list: state.history.toIndexedSeq().reverse().map(e => ({
         read: false,
         starred: state.favorites.has(e),
+        inbox: state.inbox.has(e),
         post: state.posts.get(e),
       })),
       type,
@@ -40,6 +42,17 @@ const mapS2P = (state, { navigation }) => {
       list: state.favorites.toIndexedSeq().reverse().map(e => ({
         read: false,
         starred: state.favorites.has(e),
+        inbox: state.inbox.has(e),
+        post: state.posts.get(e),
+      })),
+      type,
+    };
+  } else if(type === 'INBOX') {
+    return {
+      list: state.inbox.toIndexedSeq().reverse().map(e => ({
+        read: state.history.has(e),
+        starred: state.favorites.has(e),
+        inbox: true,
         post: state.posts.get(e),
       })),
       type,
@@ -61,6 +74,8 @@ const mapD2P = (dispatch, { navigation }) => {
       star: p => dispatch(starPost(p.newsID)),
       unstar: p => dispatch(unstarPost(p.newsID)),
       drop: p => dispatch(dropPost(p.newsID)),
+      inbox: p => dispatch(inboxRecv(p.newsID)),
+      arc: p => dispatch(inboxArc(p.newsID)),
     };
   } else return {
     refresh: async () => 0,
@@ -68,10 +83,12 @@ const mapD2P = (dispatch, { navigation }) => {
     star: p => dispatch(starPost(p.newsID)),
     unstar: p => dispatch(unstarPost(p.newsID)),
     drop: p => dispatch(dropPost(p.newsID)),
+    inbox: p => dispatch(inboxRecv(p.newsID)),
+    arc: p => dispatch(inboxArc(p.newsID)),
   };
 };
 
-function List({ navigation, type, category, list, refresh: doRefresh, extend, star, unstar, drop }) {
+function List({ navigation, type, category, list, refresh: doRefresh, extend, star, unstar, drop, inbox, arc }) {
 
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -114,6 +131,10 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend, st
   } else if(type === 'FAVORITES') {
     header = <Appbar.Content
       title="Favorites"
+    />
+  } else if(type === 'INBOX') {
+    header = <Appbar.Content
+      title="Inbox"
     />
   }
 
@@ -192,6 +213,16 @@ function List({ navigation, type, category, list, refresh: doRefresh, extend, st
           onPress={() => {
             if(context?.starred) unstar(context?.post);
             else star(context?.post);
+            setContext(null);
+          }}
+        />
+
+        <RNPList.Item
+          title={context?.inbox ? 'Archive from Inbox' : 'Add To Inbox'}
+          left={props => <RNPList.Icon {...props} icon={context?.inbox ? 'done' : 'move-to-inbox' } />}
+          onPress={() => {
+            if(context?.inbox) arc(context?.post);
+            else inbox(context?.post);
             setContext(null);
           }}
         />

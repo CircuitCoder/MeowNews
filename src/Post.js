@@ -2,13 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 
 import { ToastAndroid, Share, Image, View, ScrollView, StyleSheet } from 'react-native';
-import { Appbar, Text } from 'react-native-paper';
+import { Divider, Portal, Dialog, ActivityIndicator, Appbar, Text, Button } from 'react-native-paper';
+
+import AES from 'aes-js';
 
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system'
+import * as Random from 'expo-random';
+import * as Crypto from 'expo-crypto';
 
-import { readPost, starPost, unstarPost } from './store/actions';
+import { readPost, starPost, unstarPost, inboxArc } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
 
@@ -17,6 +21,7 @@ const mapS2P = (state, { navigation }) => {
   return {
     post: state.posts.get(id),
     starred: state.favorites.has(id),
+    inInbox: state.inbox.has(id),
   };
 };
 
@@ -26,16 +31,20 @@ const mapD2P = (dispatch, { navigation }) => {
     read: () => dispatch(readPost(id)),
     star: () => dispatch(starPost(id)),
     unstar: () => dispatch(unstarPost(id)),
+    arc: () => dispatch(inboxArc(id)),
   };
 };
 
 const THRESHOLD = 154;
 
-function Post({ navigation, post, read, star, unstar, starred }) {
+function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
   useEffect(() => {
     read();
   }, []);
+
   const [appbar, setAppbar] = useState(0);
+  const [encSharing, setEncSharing] = useState(false);
+
   const checkLocation = useCallback(payload => {
     const y = payload.nativeEvent.contentOffset.y;
     if(y >= THRESHOLD) setAppbar(1);
@@ -78,6 +87,40 @@ function Post({ navigation, post, read, star, unstar, starred }) {
     console.log(result);
   }, [post]);
 
+  const encShare = useCallback(async () => {
+    setEncSharing(true);
+
+    const plain = JSON.stringify(post);
+    const key = await Random.getRandomBytesAsync(256/8);
+    const ctr = new AES.ModeOfOperation.ctr(key);
+    const encrypted = ctr.encrypt(AES.utils.utf8.toBytes(plain));
+    const typed = Uint8Array.from(encrypted);
+
+    const resp = await fetch('https://transfer.sh/dye', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'applicatoin/octet-stream',
+        'Max-Downloads': 1,
+        'Max-Days': 1,
+      },
+      mode: 'cors',
+      body: typed,
+    });
+    const url = await resp.text();
+    const [,seg] = url.match(/^https:\/\/transfer\.sh\/([^/]+)\/dye$/);
+    const ident = `${seg}/${AES.utils.hex.fromBytes(key)}`;
+
+    setEncSharing(false);
+
+    setTimeout(async () => {
+      const result = await Share.share({
+        message: `Copy the following into your MeowNews Inbox:\n\n${ident}`,
+      }, {
+        dialogTitle: 'Save/Send your share-code',
+      });
+    }, 200);
+  });
+
   return <View style={styles.container}>
     <Appbar.Header style={{
       ...styles.appbar,
@@ -108,6 +151,7 @@ function Post({ navigation, post, read, star, unstar, starred }) {
       <Appbar.Action
         icon="share"
         onPress={ share }
+        onLongPress={ encShare }
       />
     </Appbar.Header>
 
@@ -128,7 +172,31 @@ function Post({ navigation, post, read, star, unstar, starred }) {
 
         { post.content.replace('\n\n+', '\n').split('\n').map((e, idx) => <Text key={idx} style={styles.para}>{ e }</Text>) }
       </View>
+
+      { inInbox ? <View style={styles.bottomBtns}>
+        <Button icon="done" style={styles.bottomBtn} onPress={() => {
+          arc();
+          navigation.goBack();
+        }}>Archive from Inbox</Button>
+        <Button icon="star" style={styles.bottomBtn} onPress={() => {
+          arc();
+          star();
+          navigation.goBack();
+        }}>Star & archive</Button>
+      </View> : null}
     </ScrollView>
+
+    <Portal>
+      <Dialog
+        visible={encSharing}
+        onDismiss={() => setEncSharing(false)}
+      >
+        <Dialog.Title>Generating, calculating and sending some bytes</Dialog.Title>
+        <Dialog.Content>
+          <ActivityIndicator size="large" />
+        </Dialog.Content>
+      </Dialog>
+    </Portal>
   </View>;
 }
 
@@ -181,6 +249,15 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1,
     flex: 1,
+  },
+
+  bottomBtns: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+
+  bottomBtn: {
+    marginBottom: 20,
   },
 });
 

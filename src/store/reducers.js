@@ -65,3 +65,18 @@ export function favorites(state=OrderedSet(), action) {
 
   return state;
 }
+
+export function inbox(state=OrderedSet(), action) {
+  if(action.type === 'RESET')
+    return OrderedSet();
+  if(action.type === 'INBOX_RECV') {
+    const removed = state.remove(action.id); // Propagate to front
+    return removed.add(action.id);
+  }
+  if(action.type === 'INBOX_ARC')
+    return state.remove(action.id);
+  if(action.type === 'DROP_POST')
+    return state.remove(action.id);
+
+  return state;
+}

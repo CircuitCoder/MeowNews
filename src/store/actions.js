@@ -33,6 +33,16 @@ export const unstarPost = id => ({
   id,
 });
 
+export const inboxRecv = id => ({
+  type: 'INBOX_RECV',
+  id,
+});
+
+export const inboxArc = id => ({
+  type: 'INBOX_ARC',
+  id,
+});
+
 export const dropPost = id => ({
   type: 'DROP_POST',
   id,
