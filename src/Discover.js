@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { TextInput, VirtualizedList, View, StyleSheet } from 'react-native';
+import { Image, ToastAndroid, TextInput, VirtualizedList, View, StyleSheet } from 'react-native';
 import { Surface, ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
 import { connect } from 'react-redux';
 import { fetchList } from './util';
@@ -8,9 +8,10 @@ import { List as ImList, Seq } from 'immutable';
 
 import { ALL_CATEGORIES } from './config';
 
-import { putPost } from './store/actions';
+import { putPost, inboxRecv } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
+import notfound from '../assets/notfound.png';
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -49,9 +50,10 @@ const mapS2P = state => {
 
 const mapD2P = dispatch => ({
   addPost: p => dispatch(putPost(p.newsID, p)),
+  inbox: p => dispatch(inboxRecv(p.newsID)),
 });
 
-function Search({ navigation, addPost, keywords, history }) {
+function Search({ navigation, addPost, keywords, history, inbox }) {
   const [refreshing, setRefreshing] = useState(false);
   const [list, setList] = useState(null);
 
@@ -81,25 +83,30 @@ function Search({ navigation, addPost, keywords, history }) {
     refresh();
   }, []);
 
-  return <VirtualizedList
-    style={styles.list}
-    data={list || ImList()}
-    getItem={(data, idx) => data.get(idx)}
-    getItemCount={data => data.size}
-    keyExtractor={(post, idx) => post.newsID}
+  return <View style={styles.container}>
+    <VirtualizedList
+      style={styles.list}
+      data={list || ImList()}
+      getItem={(data, idx) => data.get(idx)}
+      getItemCount={data => data.size}
+      keyExtractor={(post, idx) => post.newsID}
 
-    onRefresh={refresh}
-    refreshing={refreshing}
+      onRefresh={refresh}
+      refreshing={refreshing}
 
-    renderItem={({ item: post, index }) => {
-      return <Card
-        style={styles.card}
-        elevation={2}
-        onPress={() => {
-          addPost(post);
-          navigation.push('Post', { id: post.newsID })
-        }}
-          onLongPress={() => console.log(post)}
+      renderItem={({ item: post, index }) => {
+        return <Card
+          style={styles.card}
+          elevation={2}
+          onPress={() => {
+            addPost(post);
+            navigation.push('Post', { id: post.newsID })
+          }}
+          onLongPress={() => {
+            addPost(post);
+            inbox(post);
+            ToastAndroid.show('Added to Inbox', ToastAndroid.SHORT);
+          }}
         >
           <Card.Cover
             style={styles.img}
@@ -117,8 +124,37 @@ function Search({ navigation, addPost, keywords, history }) {
             </View>
           </View>
         </Card>;
-    }}
-  />
+      }}
+    />
+    { (!list || list.size === 0) && !refreshing ? <View style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    }}>
+      <Image
+        source={notfound}
+        resizeMode="contain"
+        style={{
+          height: 120,
+        }}
+      />
+      <Text style={{
+        marginTop: 10,
+        color: 'rgba(0,0,0,.38)',
+        fontSize: 14,
+      }}>Nothing to see here. Yet.</Text>
+      <Text style={{
+        color: 'rgba(0,0,0,.38)',
+        fontSize: 14,
+      }}>Read more and come back!</Text>
+    </View> : null }
+  </View>
 }
 
 const styles = StyleSheet.create({

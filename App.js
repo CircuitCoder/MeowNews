@@ -7,7 +7,13 @@ import { View } from 'react-native';
 import createStore from './src/store/store';
 import Root from './src/Root';
 
+import * as WeChat from 'react-native-wechat';
+
+import { WX_APPID } from './config';
+
 const { store, persistor } = createStore();
+
+WeChat.registerApp(WX_APPID).then(console.log);
 
 export default function App() {
   return (

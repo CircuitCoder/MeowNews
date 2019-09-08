@@ -80,3 +80,16 @@ export function inbox(state=OrderedSet(), action) {
 
   return state;
 }
+
+export function searchHist(state=List(), action) {
+  if(action.type === 'RESET')
+    return List();
+  if(action.type === 'SEARCH_HIST_PUSH') {
+    if(state.includes(action.token)) return state;
+    const pushed = state.push(action.token);
+    if(pushed.size <= 3) return pushed;
+    return pushed.shift(1);
+  }
+
+  return state;
+}

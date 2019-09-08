@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { TextInput, VirtualizedList, Image, View, StyleSheet } from 'react-native';
-import { Surface, ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
+import { ToastAndroid, TextInput, VirtualizedList, Image, View, StyleSheet } from 'react-native';
+import { Surface, List, ActivityIndicator, Appbar, Text, Card } from 'react-native-paper';
 import { connect } from 'react-redux';
 import { fetchList } from './util';
 
@@ -8,16 +8,22 @@ import { List as ImList, Seq } from 'immutable';
 
 import { ALL_CATEGORIES } from './config';
 
-import { putPost } from './store/actions';
+import { putPost, inboxRecv, searchHistPush } from './store/actions';
 
 import placeholder from '../assets/placeholder.jpg';
 import notfound from '../assets/notfound.png';
 
-const mapD2P = dispatch => ({
-  addPost: p => dispatch(putPost(p.newsID, p)),
+const mapS2P = state => ({
+  hist: state.searchHist,
 });
 
-function Search({ navigation, addPost }) {
+const mapD2P = dispatch => ({
+  addPost: p => dispatch(putPost(p.newsID, p)),
+  inbox: p => dispatch(inboxRecv(p.newsID)),
+  pushToken: token => dispatch(searchHistPush(token)),
+});
+
+function Search({ navigation, addPost, inbox, pushToken, hist }) {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -77,10 +83,27 @@ function Search({ navigation, addPost }) {
               setDebouncer(null);
             }, 500));
           }}
+          onBlur={() => {
+            if(search !== '')
+              pushToken(search);
+          }}
           value={search}
+        />
+        <Appbar.Action
+          onPress={() => setSearch('')}
+          icon="close"
         />
       </Appbar.Header>
     </Surface>
+
+    { search === '' ?  <Surface elevation={4} style={styles.hist}>
+      { hist.reverse().map(h => <List.Item
+        key={h}
+        title={h}
+        onPress={() => setSearch(h)}
+        left={props => <List.Icon {...props} icon="history" />}
+      />)}
+    </Surface> : null }
 
     <VirtualizedList
       style={styles.list}
@@ -111,7 +134,11 @@ function Search({ navigation, addPost }) {
             addPost(post);
             navigation.push('Post', { id: post.newsID })
           }}
-          onLongPress={() => console.log(post)}
+          onLongPress={() => {
+            addPost(post);
+            inbox(post);
+            ToastAndroid.show('Added to Inbox', ToastAndroid.SHORT);
+          }}
         >
           <Card.Cover
             style={styles.img}
@@ -153,8 +180,8 @@ function Search({ navigation, addPost }) {
       <Text style={{
         marginTop: 10,
         color: 'rgba(0,0,0,.38)',
-        fontSize: 16,
-      }}>Nothing to see here</Text>
+        fontSize: 14,
+      }}>Empty cardboard box with a cat</Text>
     </View> : null }
   </View>;
 }
@@ -251,6 +278,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginLeft: 10,
   },
+
+  hist: {
+    zIndex: 10,
+  },
 });
 
-export default connect(null, mapD2P)(Search);
+export default connect(mapS2P, mapD2P)(Search);

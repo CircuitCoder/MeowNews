@@ -48,6 +48,11 @@ export const dropPost = id => ({
   id,
 });
 
+export const searchHistPush = token => ({
+  type: 'SEARCH_HIST_PUSH',
+  token,
+});
+
 export const reset = () => ({
   type: 'RESET',
 });

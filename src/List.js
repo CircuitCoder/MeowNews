@@ -137,7 +137,7 @@ function List({ navigation, type, category, list: fullList, refresh: doRefresh, 
 
   const encRecv = useCallback(async () => {
     const ident = await Clipboard.getString();
-    ToastAndroid.show(ident, ToastAndroid.SHORT);
+    ToastAndroid.show('Loading...', ToastAndroid.SHORT);
 
     const match = ident.match(/^([^/]+)\/([0-9a-f]+)$/);
     if(!match)
@@ -315,8 +315,8 @@ function List({ navigation, type, category, list: fullList, refresh: doRefresh, 
       <Text style={{
         marginTop: 10,
         color: 'rgba(0,0,0,.38)',
-        fontSize: 16,
-      }}>Nothing to see here</Text>
+        fontSize: 14,
+      }}>Empty cardboard box with a cat</Text>
     </View> : null }
   </View>;
 }

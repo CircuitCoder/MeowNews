@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { connect } from 'react-redux';
 
+import * as Wechat from 'react-native-wechat';
 import RichShare from 'react-native-share';
 
 import { ToastAndroid, Share, Image, View, ScrollView, StyleSheet } from 'react-native';
-import { Divider, Portal, Dialog, ActivityIndicator, Appbar, Text, Button } from 'react-native-paper';
+import { Divider, Portal, Dialog, ActivityIndicator, Appbar, Text, Button, List } from 'react-native-paper';
 
 import AES from 'aes-js';
 import { Buffer } from 'buffer';
@@ -47,6 +48,7 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
 
   const [appbar, setAppbar] = useState(0);
   const [encSharing, setEncSharing] = useState(false);
+  const [advancedSharing, setAdvancedSharing] = useState(false);
 
   const checkLocation = useCallback(payload => {
     const y = payload.nativeEvent.contentOffset.y;
@@ -98,7 +100,43 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
     const result = await RichShare.open(opts);
   }, [post]);
 
+  async function getWechatMetadata() {
+    const digest = post.content.substr(0, 80) + '...';
+    if(post.images.length > 0) {
+      const segs = post.images[0].split('.');
+      const ext = segs[segs.length-1];
+      const { uri, status, headers } = await FileSystem.downloadAsync(post.images[0], FileSystem.cacheDirectory + 'tmp.' + ext);
+      return {
+        type: 'imageFile',
+        imageUrl: uri,
+      };
+    } else {
+      return {
+        description: `I'm reading: ${post.title}\n\n${digest}`,
+        type: 'text',
+      };
+    }
+  }
+
+  const wechatShare = useCallback(async () => {
+    setAdvancedSharing(false);
+    const metadata = await getWechatMetadata();
+    const resp = await Wechat.shareToSession(metadata);
+    console.log(resp);
+  });
+
+  const wechatTLShare = useCallback(async () => {
+    setAdvancedSharing(false);
+    const metadata = await getWechatMetadata();
+    const resp = await Wechat.shareToTimeline({
+      type: 'text',
+      description: '???',
+    });
+    console.log(resp);
+  });
+
   const encShare = useCallback(async () => {
+    setAdvancedSharing(false);
     setEncSharing(true);
 
     const plain = JSON.stringify(post);
@@ -163,7 +201,7 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
       <Appbar.Action
         icon="share"
         onPress={ share }
-        onLongPress={ encShare }
+        onLongPress={ () => setAdvancedSharing(true) }
       />
     </Appbar.Header>
 
@@ -197,6 +235,29 @@ function Post({ navigation, post, read, star, unstar, starred, inInbox, arc }) {
         }}>Star & archive</Button>
       </View> : null}
     </ScrollView>
+
+    <Portal>
+      <Dialog
+        visible={advancedSharing}
+        onDismiss={() => setAdvancedSharing(false)}
+      >
+        <List.Item
+          title="Generate encrypted single-use token"
+          left={props => <List.Icon {...props} icon="lock" />}
+          onPress={encShare}
+        />
+        <List.Item
+          title="Share to WeChat"
+          left={props => <List.Icon {...props} icon="question-answer" />}
+          onPress={wechatShare}
+        />
+        <List.Item
+          title="Share to WeChat Timeline"
+          left={props => <List.Icon {...props} icon="camera" />}
+          onPress={wechatTLShare}
+        />
+      </Dialog>
+    </Portal>
 
     <Portal>
       <Dialog

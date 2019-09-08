@@ -27,7 +27,7 @@ public class MainActivity extends DetachActivity implements PermissionAwareActiv
 
   @Override
   public String publishedUrl() {
-    return "exp://exp.host/@circuitcoder/PaperDye";
+    return "exps://xXxXxXxXxXx/meow-news/android-index.json";
   }
 
   @Override

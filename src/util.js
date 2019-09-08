@@ -1,3 +1,5 @@
+import { ENDPOINT } from '../config';
+
 export function formatTime(d) {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 }
@@ -13,7 +15,7 @@ export function formatDateTime(d) {
 export async function fetchList({ from, till, category, keywords, limit }) {
   const tillTs = till || formatDateTime(new Date());
   const fromTs = from || '1970-01-01 00:00:00';
-  let url = `xXxXxXxXxXx?size=${limit || 20}&startDate=${fromTs}&endDate=${tillTs}&categories=${category || ''}&words=${(keywords || []).join(',')}`;
+  let url = `${ENDPOINT}?size=${limit || 20}&startDate=${fromTs}&endDate=${tillTs}&categories=${category || ''}&words=${(keywords || []).join(',')}`;
 
   const resp = await fetch(url);
   const list = await resp.json();
